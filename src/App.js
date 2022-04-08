@@ -1,34 +1,15 @@
-import React, { useRef, useState, Suspense } from 'react'
+import React, { useRef, Suspense } from 'react'
 import { Canvas, useFrame, useThree, extend } from '@react-three/fiber'
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
-import Duck from './Duck'
+
+import Tile from './models/Tile'
+import Duck from './models/Duck'
+
+//import Duck from './models/Duck'
 
 import './App.css'
 
 extend({ OrbitControls });
-
-function Box(props) {
-  // This reference gives us direct access to the THREE.Mesh object
-  const ref = useRef()
-  // Hold state for hovered and clicked events
-  const [hovered, hover] = useState(false)
-  const [clicked, click] = useState(false)
-  // Subscribe this component to the render-loop, rotate the mesh every frame
-  useFrame((/*state,delta*/) => (ref.current.rotation.x += 0.01))
-  // Return the view, these are regular Threejs elements expressed in JSX
-  return (
-    <mesh
-      {...props}
-      ref={ref}
-      scale={clicked ? 1.5 : 1}
-      onClick={(event) => click(!clicked)}
-      onPointerOver={(event) => hover(true)}
-      onPointerOut={(event) => hover(false)}>
-      <boxGeometry args={[1, 1, 1]} />
-      <meshStandardMaterial color={hovered ? 'hotpink' : 'orange'} />
-    </mesh>
-  )
-}
 
 const CameraControls = () => {
   // Get a reference to the Three.js Camera, and the canvas html element.
@@ -45,6 +26,30 @@ const CameraControls = () => {
 };
 
 export default function App() {
+
+  let board = {}
+
+  for (let i =0 ; i<8 ; i++){
+    for (let j = 0 ; j<8 ; j++){
+      board[`${i}${j}`]= {
+        tile: <Tile key={`${i}${j}`} position={[i-4,0,j]} color={(i+j)%2 === 0 ? "white": "black"} />,
+        piece: null
+      }
+      if(i===1){
+        board[`${i}${j}`].piece = {
+          type: <Duck position={[i-4,0,j]} team="white"/>,
+          team: "white"
+        }
+      }
+      if(i===6){
+        board[`${i}${j}`].piece = {
+          type: <Duck position={[i-4,0,j]} team="black" rotation={[0,Math.PI,0]}/>,
+          team: "black"
+        }
+      }
+    }
+  }
+
   return (
     <Canvas className="canvas" style={{height: "100vh", width: "100vw"}}>
       
@@ -52,10 +57,16 @@ export default function App() {
       <ambientLight intensity={0.5} />
       <spotLight position={[10, 10, 10]} angle={0.15} penumbra={1} />
       <pointLight position={[-10, -10, -10]} />
+      {/*
       <Box position={[-1.2, 0, 0]} />
       <Box position={[1.2, 0, 0]} />
+      */}
+      <Tile position={[2,-3,2]} color="black"/>
       <Suspense fallback={null}>
-        <Duck />
+      {/* <Duck /> */}
+      {Object.keys(board).map((key)=>(board[key].tile))}
+      {Object.keys(board).map((key)=>(board[key].piece ? board[key].piece.type : null))}
+
       </Suspense>
     </Canvas>
   )
